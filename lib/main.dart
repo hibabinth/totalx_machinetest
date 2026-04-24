@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'presentation/viewmodels/auth_viewmodel.dart';
+import 'presentation/views/auth/login_view.dart';
+import 'presentation/views/home/home_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,7 +23,13 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'TOTAL-X',
         theme: ThemeData(useMaterial3: true, fontFamily: 'Roboto'),
-        home: const Scaffold(body: Center(child: Text('Provider Connected'))),
+        home: Consumer<AuthViewModel>(
+          builder: (context, authViewModel, _) {
+            return authViewModel.isLoggedIn
+                ? const HomeView()
+                : const LoginView();
+          },
+        ),
       ),
     );
   }
