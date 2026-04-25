@@ -1,48 +1,44 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/user_model.dart';
 
 class UserService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DatabaseReference _db = FirebaseDatabase.instance.ref('users');
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  CollectionReference<Map<String, dynamic>> get _users =>
-      _firestore.collection('users');
-
-  Future<String> uploadUserImage(File imageFile, String userId) async {
+  // Upload image
+  Future<String> uploadUserImage(File file, String userId) async {
     final ref = _storage.ref().child('users/$userId.jpg');
-    await ref.putFile(imageFile);
-    return ref.getDownloadURL();
+    await ref.putFile(file);
+    return await ref.getDownloadURL();
   }
 
+  // Add user
   Future<void> addUser(UserModel user) async {
-    await _users.doc(user.id).set(user.toMap());
+    await _db.child(user.id).set(user.toMap());
   }
 
-  Future<void> updateUser(UserModel user) async {
-    await _users.doc(user.id).update(user.toMap());
+  // Get users stream
+  Stream<List<UserModel>> getUsers() {
+    return _db.onValue.map((event) {
+      final data = event.snapshot.value;
+
+      if (data == null) return [];
+
+      final map = Map<String, dynamic>.from(data as dynamic);
+
+      return map.values
+          .map((e) => UserModel.fromMap(Map<String, dynamic>.from(e)))
+          .toList();
+    });
   }
 
-  Future<void> deleteUser(String userId) async {
-    await _users.doc(userId).delete();
-    await _storage.ref().child('users/$userId.jpg').delete().catchError((_) {});
-  }
-
-  Future<QuerySnapshot<Map<String, dynamic>>> fetchUsers({
-    DocumentSnapshot? lastDocument,
-    int limit = 10,
-  }) {
-    Query<Map<String, dynamic>> query = _users
-        .orderBy('createdAt', descending: true)
-        .limit(limit);
-
-    if (lastDocument != null) {
-      query = query.startAfterDocument(lastDocument);
-    }
-
-    return query.get();
+  // Delete
+  Future<void> deleteUser(String id) async {
+    await _db.child(id).remove();
+    await _storage.ref().child('users/$id.jpg').delete().catchError((_) {});
   }
 }
