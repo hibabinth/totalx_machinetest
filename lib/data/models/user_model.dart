@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 class UserModel {
   final String id;
   final String name;
@@ -20,11 +18,11 @@ class UserModel {
   Map<String, dynamic> toMap() {
     return {
       'id': id,
-      'name': name.trim(),
-      'phone': phone.trim(),
+      'name': name,
+      'phone': phone,
       'age': age,
       'imageUrl': imageUrl,
-      'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': createdAt.toIso8601String(),
     };
   }
 
@@ -35,9 +33,7 @@ class UserModel {
       phone: map['phone'] ?? '',
       age: map['age'] ?? 0,
       imageUrl: map['imageUrl'] ?? '',
-      createdAt: map['createdAt'] is Timestamp
-          ? (map['createdAt'] as Timestamp).toDate()
-          : DateTime.now(),
+      createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
     );
   }
 }
