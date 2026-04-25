@@ -9,36 +9,40 @@ class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
-  // ✅ Upload Image
-  Future<String> uploadUserImage(File imageFile) async {
-    final String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+  CollectionReference<Map<String, dynamic>> get _users =>
+      _firestore.collection('users');
 
-    final Reference ref = _storage.ref().child('users').child('$fileName.jpg');
-
-    final UploadTask uploadTask = ref.putFile(imageFile);
-
-    await uploadTask.whenComplete(() {});
-
-    final String downloadUrl = await ref.getDownloadURL();
-
-    return downloadUrl;
+  Future<String> uploadUserImage(File imageFile, String userId) async {
+    final ref = _storage.ref().child('users/$userId.jpg');
+    await ref.putFile(imageFile);
+    return ref.getDownloadURL();
   }
 
-  // ✅ Add user to Firestore
   Future<void> addUser(UserModel user) async {
-    await _firestore.collection('users').doc(user.id).set(user.toMap());
+    await _users.doc(user.id).set(user.toMap());
   }
 
-  // ✅ Get users
-  Stream<List<UserModel>> getUsers() {
-    return _firestore
-        .collection('users')
+  Future<void> updateUser(UserModel user) async {
+    await _users.doc(user.id).update(user.toMap());
+  }
+
+  Future<void> deleteUser(String userId) async {
+    await _users.doc(userId).delete();
+    await _storage.ref().child('users/$userId.jpg').delete().catchError((_) {});
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>> fetchUsers({
+    DocumentSnapshot? lastDocument,
+    int limit = 10,
+  }) {
+    Query<Map<String, dynamic>> query = _users
         .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => UserModel.fromMap(doc.data()))
-              .toList(),
-        );
+        .limit(limit);
+
+    if (lastDocument != null) {
+      query = query.startAfterDocument(lastDocument);
+    }
+
+    return query.get();
   }
 }
