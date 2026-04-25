@@ -9,20 +9,27 @@ class UserService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
+  // ✅ Upload Image
   Future<String> uploadUserImage(File imageFile) async {
     final String fileName = DateTime.now().millisecondsSinceEpoch.toString();
 
-    final Reference ref = _storage.ref().child('user_images/$fileName.jpg');
+    final Reference ref = _storage.ref().child('users').child('$fileName.jpg');
 
-    await ref.putFile(imageFile);
+    final UploadTask uploadTask = ref.putFile(imageFile);
 
-    return await ref.getDownloadURL();
+    await uploadTask.whenComplete(() {});
+
+    final String downloadUrl = await ref.getDownloadURL();
+
+    return downloadUrl;
   }
 
+  // ✅ Add user to Firestore
   Future<void> addUser(UserModel user) async {
     await _firestore.collection('users').doc(user.id).set(user.toMap());
   }
 
+  // ✅ Get users
   Stream<List<UserModel>> getUsers() {
     return _firestore
         .collection('users')

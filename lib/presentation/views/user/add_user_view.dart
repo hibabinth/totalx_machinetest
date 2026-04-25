@@ -82,7 +82,7 @@ class _AddUserViewState extends State<AddUserView> {
                         }
                       },
                 child: viewModel.isLoading
-                    ? const CircularProgressIndicator()
+                    ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Save"),
               ),
             ],

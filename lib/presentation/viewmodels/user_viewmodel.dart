@@ -14,6 +14,7 @@ class UserViewModel extends ChangeNotifier {
   File? selectedImage;
   bool isLoading = false;
 
+  // ✅ Pick Image
   Future<void> pickImage() async {
     final XFile? pickedFile = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -25,6 +26,7 @@ class UserViewModel extends ChangeNotifier {
     }
   }
 
+  // ✅ Add User
   Future<void> addUser({
     required String name,
     required String phone,
@@ -34,25 +36,33 @@ class UserViewModel extends ChangeNotifier {
       throw Exception('Please select an image');
     }
 
-    isLoading = true;
-    notifyListeners();
+    try {
+      isLoading = true;
+      notifyListeners();
 
-    final String userId = const Uuid().v4();
-    final String imageUrl = await _userService.uploadUserImage(selectedImage!);
+      final String userId = const Uuid().v4();
 
-    final user = UserModel(
-      id: userId,
-      name: name,
-      phone: phone,
-      age: age,
-      imageUrl: imageUrl,
-      createdAt: DateTime.now(),
-    );
+      final String imageUrl = await _userService.uploadUserImage(
+        selectedImage!,
+      );
 
-    await _userService.addUser(user);
+      final user = UserModel(
+        id: userId,
+        name: name,
+        phone: phone,
+        age: age,
+        imageUrl: imageUrl,
+        createdAt: DateTime.now(),
+      );
 
-    selectedImage = null;
-    isLoading = false;
-    notifyListeners();
+      await _userService.addUser(user);
+
+      selectedImage = null;
+    } catch (e) {
+      rethrow;
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -1,4 +1,4 @@
-package com.example.totalx_machine_test
+package com.machinetest.totalx
 
 import io.flutter.embedding.android.FlutterActivity
 

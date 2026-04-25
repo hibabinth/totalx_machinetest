@@ -7,7 +7,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.totalx_machine_test"
+    namespace = "com.machinetest.totalx"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -21,7 +21,7 @@ android {
     }
 
     defaultConfig {
-    applicationId = "com.example.totalx_machine_test"
+    applicationId = "com.machinetest.totalx"
     minSdk = flutter.minSdkVersion
     targetSdk = flutter.targetSdkVersion
     versionCode = flutter.versionCode
@@ -42,8 +42,7 @@ flutter {
 }
 dependencies {
   // Import the Firebase BoM
-  implementation(platform("com.google.firebase:firebase-bom:34.12.0"))
-
+implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
 
   // TODO: Add the dependencies for Firebase products you want to use
   // When using the BoM, don't specify versions in Firebase dependencies
