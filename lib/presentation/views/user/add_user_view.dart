@@ -26,30 +26,20 @@ class _AddUserViewState extends State<AddUserView> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              GestureDetector(
-                onTap: viewModel.pickImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundImage: viewModel.selectedImage != null
-                      ? FileImage(viewModel.selectedImage!)
-                      : null,
-                  child: viewModel.selectedImage == null
-                      ? const Icon(Icons.camera_alt)
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 20),
-
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Name'),
               ),
+
+              const SizedBox(height: 10),
 
               TextField(
                 controller: _phoneController,
                 decoration: const InputDecoration(labelText: 'Phone'),
                 keyboardType: TextInputType.phone,
               ),
+
+              const SizedBox(height: 10),
 
               TextField(
                 controller: _ageController,
@@ -64,10 +54,16 @@ class _AddUserViewState extends State<AddUserView> {
                     ? null
                     : () async {
                         try {
+                          final age = int.tryParse(_ageController.text);
+
+                          if (age == null) {
+                            throw Exception("Enter valid age");
+                          }
+
                           await viewModel.addUser(
                             name: _nameController.text,
                             phone: _phoneController.text,
-                            age: int.parse(_ageController.text),
+                            age: age,
                           );
 
                           ScaffoldMessenger.of(context).showSnackBar(

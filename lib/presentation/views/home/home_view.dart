@@ -5,31 +5,8 @@ import '../../viewmodels/auth_viewmodel.dart';
 import '../../viewmodels/user_viewmodel.dart';
 import '../user/add_user_view.dart';
 
-class HomeView extends StatefulWidget {
+class HomeView extends StatelessWidget {
   const HomeView({super.key});
-
-  @override
-  State<HomeView> createState() => _HomeViewState();
-}
-
-class _HomeViewState extends State<HomeView> {
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-
-    Future.microtask(() {
-      context.read<UserViewModel>().fetchInitialUsers();
-    });
-
-    _scrollController.addListener(() {
-      if (_scrollController.position.pixels >=
-          _scrollController.position.maxScrollExtent - 200) {
-        context.read<UserViewModel>().fetchMoreUsers();
-      }
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,8 +17,8 @@ class _HomeViewState extends State<HomeView> {
         title: const Text('Nilambur'),
         actions: [
           IconButton(
-            onPressed: () => authViewModel.signOut(),
             icon: const Icon(Icons.logout),
+            onPressed: () => authViewModel.signOut(),
           ),
         ],
       ),
@@ -62,75 +39,96 @@ class _HomeViewState extends State<HomeView> {
                   ),
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Row(
-                  children: [
-                    FilterChip(
-                      label: const Text('All'),
-                      selected: viewModel.ageFilter == AgeFilter.all,
-                      onSelected: (_) =>
-                          viewModel.updateAgeFilter(AgeFilter.all),
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Age below 60'),
-                      selected: viewModel.ageFilter == AgeFilter.younger,
-                      onSelected: (_) =>
-                          viewModel.updateAgeFilter(AgeFilter.younger),
-                    ),
-                    const SizedBox(width: 8),
-                    FilterChip(
-                      label: const Text('Age above 60'),
-                      selected: viewModel.ageFilter == AgeFilter.older,
-                      onSelected: (_) =>
-                          viewModel.updateAgeFilter(AgeFilter.older),
-                    ),
-                  ],
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      FilterChip(
+                        label: const Text('All'),
+                        selected: viewModel.ageFilter == AgeFilter.all,
+                        onSelected: (_) =>
+                            viewModel.updateAgeFilter(AgeFilter.all),
+                      ),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('Age below 60'),
+                        selected: viewModel.ageFilter == AgeFilter.younger,
+                        onSelected: (_) =>
+                            viewModel.updateAgeFilter(AgeFilter.younger),
+                      ),
+                      const SizedBox(width: 8),
+                      FilterChip(
+                        label: const Text('Age above 60'),
+                        selected: viewModel.ageFilter == AgeFilter.older,
+                        onSelected: (_) =>
+                            viewModel.updateAgeFilter(AgeFilter.older),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-
+              const SizedBox(height: 8),
               Expanded(
-                child: viewModel.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : ListView.builder(
-                        controller: _scrollController,
-                        padding: const EdgeInsets.all(12),
-                        itemCount:
-                            viewModel.users.length +
-                            (viewModel.isFetchingMore ? 1 : 0),
-                        itemBuilder: (context, index) {
-                          if (index == viewModel.users.length) {
-                            return const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(16),
-                                child: CircularProgressIndicator(),
-                              ),
-                            );
-                          }
+                child: StreamBuilder<List>(
+                  stream: viewModel.getUsersStream(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-                          final user = viewModel.users[index];
+                    if (snapshot.hasError) {
+                      return Center(child: Text(snapshot.error.toString()));
+                    }
 
-                          return Card(
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: NetworkImage(user.imageUrl),
-                              ),
-                              title: Text(user.name),
-                              subtitle: Text(
-                                'Phone: ${user.phone}\nAge: ${user.age}',
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () {
-                                  viewModel.deleteUser(user.id);
-                                },
+                    final users = snapshot.data ?? [];
+                    viewModel.setUsers(users.cast());
+
+                    final filteredUsers = viewModel.users;
+
+                    if (filteredUsers.isEmpty) {
+                      return const Center(child: Text('No users found'));
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(12),
+                      itemCount: filteredUsers.length,
+                      itemBuilder: (context, index) {
+                        final user = filteredUsers[index];
+
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              radius: 28,
+                              backgroundColor: Colors.grey.shade300,
+                              child: Text(
+                                user.name.isNotEmpty
+                                    ? user.name[0].toUpperCase()
+                                    : '?',
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                            title: Text(user.name),
+                            subtitle: Text(
+                              'Phone: ${user.phone}\nAge: ${user.age}',
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete),
+                              onPressed: () {
+                                viewModel.deleteUser(user.id);
+                              },
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
               ),
             ],
           );

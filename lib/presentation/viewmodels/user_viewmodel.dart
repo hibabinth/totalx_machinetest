@@ -1,7 +1,4 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../data/models/user_model.dart';
@@ -11,13 +8,10 @@ enum AgeFilter { all, younger, older }
 
 class UserViewModel extends ChangeNotifier {
   final UserService _userService = UserService();
-  final ImagePicker _picker = ImagePicker();
 
-  File? selectedImage;
   bool isLoading = false;
 
   List<UserModel> allUsers = [];
-
   String searchQuery = '';
   AgeFilter ageFilter = AgeFilter.all;
 
@@ -61,15 +55,6 @@ class UserViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      selectedImage = File(pickedFile.path);
-      notifyListeners();
-    }
-  }
-
   Future<void> addUser({
     required String name,
     required String phone,
@@ -77,31 +62,20 @@ class UserViewModel extends ChangeNotifier {
   }) async {
     if (name.trim().isEmpty) throw Exception('Name is required');
     if (phone.trim().isEmpty) throw Exception('Phone is required');
-    if (selectedImage == null) throw Exception('Please select an image');
 
     isLoading = true;
     notifyListeners();
 
     try {
-      final userId = const Uuid().v4();
-
-      final imageUrl = await _userService.uploadUserImage(
-        selectedImage!,
-        userId,
-      );
-
       final user = UserModel(
-        id: userId,
+        id: const Uuid().v4(),
         name: name.trim(),
         phone: phone.trim(),
         age: age,
-        imageUrl: imageUrl,
         createdAt: DateTime.now(),
       );
 
       await _userService.addUser(user);
-
-      selectedImage = null;
     } finally {
       isLoading = false;
       notifyListeners();
