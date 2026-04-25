@@ -3,6 +3,7 @@ class UserModel {
   final String name;
   final String phone;
   final int age;
+  final String imageUrl;
   final DateTime createdAt;
 
   UserModel({
@@ -10,6 +11,7 @@ class UserModel {
     required this.name,
     required this.phone,
     required this.age,
+    required this.imageUrl,
     required this.createdAt,
   });
 
@@ -19,6 +21,7 @@ class UserModel {
       'name': name,
       'phone': phone,
       'age': age,
+      'imageUrl': imageUrl,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -29,6 +32,7 @@ class UserModel {
       name: map['name'] ?? '',
       phone: map['phone'] ?? '',
       age: map['age'] ?? 0,
+      imageUrl: map['imageUrl'] ?? '',
       createdAt: DateTime.tryParse(map['createdAt'] ?? '') ?? DateTime.now(),
     );
   }

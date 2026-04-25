@@ -9,6 +9,10 @@ class UserService {
     await _db.child(user.id).set(user.toMap());
   }
 
+  Future<void> updateUser(UserModel user) async {
+    await _db.child(user.id).update(user.toMap());
+  }
+
   Stream<List<UserModel>> getUsers() {
     return _db.onValue.map((event) {
       final data = event.snapshot.value;

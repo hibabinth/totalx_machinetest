@@ -59,9 +59,11 @@ class UserViewModel extends ChangeNotifier {
     required String name,
     required String phone,
     required int age,
+    required String imageUrl,
   }) async {
     if (name.trim().isEmpty) throw Exception('Name is required');
     if (phone.trim().isEmpty) throw Exception('Phone is required');
+    if (imageUrl.trim().isEmpty) throw Exception('Image URL is required');
 
     isLoading = true;
     notifyListeners();
@@ -72,6 +74,7 @@ class UserViewModel extends ChangeNotifier {
         name: name.trim(),
         phone: phone.trim(),
         age: age,
+        imageUrl: imageUrl.trim(),
         createdAt: DateTime.now(),
       );
 
@@ -86,5 +89,36 @@ class UserViewModel extends ChangeNotifier {
     await _userService.deleteUser(userId);
     allUsers.removeWhere((user) => user.id == userId);
     notifyListeners();
+  }
+
+  Future<void> updateUser({
+    required String id,
+    required String name,
+    required String phone,
+    required int age,
+    required String imageUrl,
+    required DateTime createdAt,
+  }) async {
+    if (name.trim().isEmpty) throw Exception('Name is required');
+    if (phone.trim().isEmpty) throw Exception('Phone is required');
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      final user = UserModel(
+        id: id,
+        name: name.trim(),
+        phone: phone.trim(),
+        age: age,
+        imageUrl: imageUrl.trim(),
+        createdAt: createdAt,
+      );
+
+      await _userService.updateUser(user);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }
