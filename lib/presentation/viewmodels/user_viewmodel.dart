@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:uuid/uuid.dart';
@@ -16,20 +15,18 @@ class UserViewModel extends ChangeNotifier {
 
   File? selectedImage;
   bool isLoading = false;
-  bool isFetchingMore = false;
-  bool hasMore = true;
 
-  final List<UserModel> _users = [];
-  DocumentSnapshot? _lastDocument;
+  List<UserModel> allUsers = [];
 
   String searchQuery = '';
   AgeFilter ageFilter = AgeFilter.all;
 
   List<UserModel> get users {
-    List<UserModel> result = [..._users];
+    List<UserModel> result = [...allUsers];
 
     if (searchQuery.isNotEmpty) {
       final query = searchQuery.toLowerCase();
+
       result = result.where((user) {
         return user.name.toLowerCase().contains(query) ||
             user.phone.contains(query);
@@ -45,62 +42,13 @@ class UserViewModel extends ChangeNotifier {
     return result;
   }
 
-  Future<void> pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    if (pickedFile != null) {
-      selectedImage = File(pickedFile.path);
-      notifyListeners();
-    }
+  Stream<List<UserModel>> getUsersStream() {
+    return _userService.getUsers();
   }
 
-  Future<void> fetchInitialUsers() async {
-    isLoading = true;
-    hasMore = true;
-    _lastDocument = null;
-    _users.clear();
+  void setUsers(List<UserModel> users) {
+    allUsers = users;
     notifyListeners();
-
-    try {
-      final snapshot = await _userService.fetchUsers();
-
-      if (snapshot.docs.isNotEmpty) {
-        _lastDocument = snapshot.docs.last;
-        _users.addAll(
-          snapshot.docs.map((doc) => UserModel.fromMap(doc.data())),
-        );
-      }
-
-      if (snapshot.docs.length < 10) hasMore = false;
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  Future<void> fetchMoreUsers() async {
-    if (isFetchingMore || !hasMore) return;
-
-    isFetchingMore = true;
-    notifyListeners();
-
-    try {
-      final snapshot = await _userService.fetchUsers(
-        lastDocument: _lastDocument,
-      );
-
-      if (snapshot.docs.isNotEmpty) {
-        _lastDocument = snapshot.docs.last;
-        _users.addAll(
-          snapshot.docs.map((doc) => UserModel.fromMap(doc.data())),
-        );
-      }
-
-      if (snapshot.docs.length < 10) hasMore = false;
-    } finally {
-      isFetchingMore = false;
-      notifyListeners();
-    }
   }
 
   void updateSearch(String value) {
@@ -111,6 +59,15 @@ class UserViewModel extends ChangeNotifier {
   void updateAgeFilter(AgeFilter filter) {
     ageFilter = filter;
     notifyListeners();
+  }
+
+  Future<void> pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      selectedImage = File(pickedFile.path);
+      notifyListeners();
+    }
   }
 
   Future<void> addUser({
@@ -127,6 +84,7 @@ class UserViewModel extends ChangeNotifier {
 
     try {
       final userId = const Uuid().v4();
+
       final imageUrl = await _userService.uploadUserImage(
         selectedImage!,
         userId,
@@ -134,16 +92,16 @@ class UserViewModel extends ChangeNotifier {
 
       final user = UserModel(
         id: userId,
-        name: name,
-        phone: phone,
+        name: name.trim(),
+        phone: phone.trim(),
         age: age,
         imageUrl: imageUrl,
         createdAt: DateTime.now(),
       );
 
       await _userService.addUser(user);
+
       selectedImage = null;
-      await fetchInitialUsers();
     } finally {
       isLoading = false;
       notifyListeners();
@@ -152,7 +110,7 @@ class UserViewModel extends ChangeNotifier {
 
   Future<void> deleteUser(String userId) async {
     await _userService.deleteUser(userId);
-    _users.removeWhere((user) => user.id == userId);
+    allUsers.removeWhere((user) => user.id == userId);
     notifyListeners();
   }
-}s
+}
