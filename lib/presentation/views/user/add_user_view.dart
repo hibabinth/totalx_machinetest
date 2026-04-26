@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_strings.dart';
 import '../../../data/models/user_model.dart';
 import '../../viewmodels/user_viewmodel.dart';
 
@@ -42,6 +44,32 @@ class _AddUserViewState extends State<AddUserView> {
     super.dispose();
   }
 
+  Future<void> _saveUser(UserViewModel viewModel) async {
+    final age = int.tryParse(_ageController.text.trim());
+
+    if (age == null) {
+      throw Exception("Enter valid age");
+    }
+
+    if (isEdit) {
+      await viewModel.updateUser(
+        id: widget.user!.id,
+        name: _nameController.text,
+        phone: _phoneController.text,
+        age: age,
+        imageUrl: _imageUrlController.text,
+        createdAt: widget.user!.createdAt,
+      );
+    } else {
+      await viewModel.addUser(
+        name: _nameController.text,
+        phone: _phoneController.text,
+        age: age,
+        imageUrl: _imageUrlController.text,
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<UserViewModel>();
@@ -53,7 +81,7 @@ class _AddUserViewState extends State<AddUserView> {
           margin: const EdgeInsets.all(20),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(18),
           ),
           child: SingleChildScrollView(
@@ -89,7 +117,7 @@ class _AddUserViewState extends State<AddUserView> {
                 TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
-                    labelText: 'Name',
+                    labelText: AppStrings.name,
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -99,7 +127,7 @@ class _AddUserViewState extends State<AddUserView> {
                 TextField(
                   controller: _phoneController,
                   decoration: const InputDecoration(
-                    labelText: 'Phone',
+                    labelText: AppStrings.phone,
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.phone,
@@ -110,7 +138,7 @@ class _AddUserViewState extends State<AddUserView> {
                 TextField(
                   controller: _ageController,
                   decoration: const InputDecoration(
-                    labelText: 'Age',
+                    labelText: AppStrings.age,
                     border: OutlineInputBorder(),
                   ),
                   keyboardType: TextInputType.number,
@@ -121,7 +149,7 @@ class _AddUserViewState extends State<AddUserView> {
                 TextField(
                   controller: _imageUrlController,
                   decoration: const InputDecoration(
-                    labelText: 'Image URL',
+                    labelText: AppStrings.imageUrl,
                     hintText: 'Paste direct image URL',
                     border: OutlineInputBorder(),
                   ),
@@ -137,10 +165,10 @@ class _AddUserViewState extends State<AddUserView> {
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.grey.shade300,
-                          foregroundColor: Colors.black,
+                          foregroundColor: AppColors.primary,
                         ),
                         onPressed: () => Navigator.pop(context),
-                        child: const Text("Cancel"),
+                        child: const Text(AppStrings.cancel),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -150,31 +178,7 @@ class _AddUserViewState extends State<AddUserView> {
                             ? null
                             : () async {
                                 try {
-                                  final age = int.tryParse(
-                                    _ageController.text.trim(),
-                                  );
-
-                                  if (age == null) {
-                                    throw Exception("Enter valid age");
-                                  }
-
-                                  if (isEdit) {
-                                    await viewModel.updateUser(
-                                      id: widget.user!.id,
-                                      name: _nameController.text,
-                                      phone: _phoneController.text,
-                                      age: age,
-                                      imageUrl: _imageUrlController.text,
-                                      createdAt: widget.user!.createdAt,
-                                    );
-                                  } else {
-                                    await viewModel.addUser(
-                                      name: _nameController.text,
-                                      phone: _phoneController.text,
-                                      age: age,
-                                      imageUrl: _imageUrlController.text,
-                                    );
-                                  }
+                                  await _saveUser(viewModel);
 
                                   if (!context.mounted) return;
 
@@ -199,10 +203,10 @@ class _AddUserViewState extends State<AddUserView> {
                                 width: 18,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppColors.white,
                                 ),
                               )
-                            : Text(isEdit ? "Update" : "Save"),
+                            : Text(isEdit ? "Update" : AppStrings.save),
                       ),
                     ),
                   ],
