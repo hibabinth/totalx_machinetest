@@ -5,7 +5,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../data/models/user_model.dart';
 import '../../../viewmodels/auth_viewmodel.dart';
 import '../../../viewmodels/user_viewmodel.dart';
-import '../../user/add_user_view.dart';
+import '../../user/views/add_user_view.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_search_sort_bar.dart';
 import '../widgets/sort_bottom_sheet.dart';
